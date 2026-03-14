@@ -1,3 +1,5 @@
+# Stuff for the working PyInstaller (.exe)
+# pyinstaller --onefile --noconsole --clean --name Quick-CMD --icon=media/logo/logo.ico --hidden-import=speedtest --hidden-import=winshell --collect-all customtkinter quick-cmd.py
 import sys
 import os
 
