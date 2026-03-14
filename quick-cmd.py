@@ -216,9 +216,7 @@ def internet_speedtest():
 
             status_label.configure(text="Testing internet speed...")
 
-            # -------------------
             # Using speedtest-cli
-            # -------------------
             st = speedtest.Speedtest()
 
             # Get best server (avoids 403)
