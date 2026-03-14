@@ -201,7 +201,6 @@ def internet_speedtest():
     speed_window.geometry("260x285")
     speed_window.title("Internet Speed Test")
     speed_window.resizable(width=False, height=False)
-    speed_window.iconbitmap(resource_path("media/logo/logo.ico"))
     speed_window.transient(app)
 
     # New UI
