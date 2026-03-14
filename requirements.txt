@@ -1,0 +1,4 @@
+customtkinter
+requests
+speedtest-cli
+winshell
