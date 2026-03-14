@@ -17,7 +17,6 @@ app.geometry("310x310")
 app.title(f"Quick-CMD ({username})")
 app.resizable(width=False, height=False)
 ctk.set_appearance_mode("system")
-# TEST STUFF
 
 
 # App functions
