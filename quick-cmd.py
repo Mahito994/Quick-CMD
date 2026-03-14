@@ -1,5 +1,5 @@
 # Stuff for the working PyInstaller (.exe)
-# pyinstaller --onefile --noconsole --clean --name Quick-CMD --icon=media/logo/logo.ico --hidden-import=speedtest --hidden-import=winshell --collect-all customtkinter quick-cmd.py
+# python -m PyInstaller --onefile --noconsole --clean --name Quick-CMD --icon=media/logo/logo.ico --hidden-import=speedtest --hidden-import=winshell --collect-all customtkinter --add-data "media/logo/logo.ico;media/logo" quick-cmd.py
 import sys
 import os
 
@@ -7,6 +7,16 @@ if sys.stdout is None:
     sys.stdout = open(os.devnull, "w")
 if sys.stderr is None:
     sys.stderr = open(os.devnull, "w")
+
+
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and PyInstaller"""
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
 
 import customtkinter as ctk
 import subprocess
@@ -25,7 +35,7 @@ username = os.getlogin()
 app = ctk.CTk()
 app.geometry("310x310")
 app.title(f"Quick-CMD ({username})")
-app.iconbitmap("media/logo/logo.ico")
+app.iconbitmap(resource_path("media/logo/logo.ico"))
 app.resizable(width=False, height=False)
 ctk.set_appearance_mode("system")
 
@@ -191,7 +201,7 @@ def internet_speedtest():
     speed_window.geometry("260x285")
     speed_window.title("Internet Speed Test")
     speed_window.resizable(width=False, height=False)
-    speed_window.after(200, lambda: speed_window.iconbitmap("media/logo/logo.ico"))
+    speed_window.iconbitmap(resource_path("media/logo/logo.ico"))
     speed_window.transient(app)
 
     # New UI
