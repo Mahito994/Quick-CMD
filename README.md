@@ -19,5 +19,14 @@ wouldnt mind to review and add them to the Utility. Thanks for everyone trying o
 
 ## Screenshots
 <div align="center">
-  mediaa
+  <img src="media/screenshots/full_main.png"/>
 </div>
+
+## Features
+
+- Quick open Terminal with and without admin
+- Quick open the Registry Editor
+- Quick open the old Control Panel delete application panel
+- Quick open the device manager
+- Quick open the task manager
+- Clearing the tempoary files in C:/Windows/Temp
