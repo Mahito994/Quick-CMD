@@ -33,7 +33,7 @@ import threading
 from tkinter import messagebox, Tk
 
 # ---- Update System ----
-downloaded_version = "v1.0"
+downloaded_version = "v1.1"
 
 
 def parse_version(v):
@@ -217,15 +217,18 @@ def clear_browser_cache():
 
 
 def show_ip():
-    hostname = socket.gethostname()
-    ip_address = socket.gethostbyname(hostname)
-    public_ip_address = requests.get("https://api.ipify.org").text
-
-    print("Your local IP is: ", ip_address)
-    print("Your public IP is:", public_ip_address)
-    messagebox.showinfo(
-        "IP Addresses", f"Local IP: {ip_address} \nPublic IP: {public_ip_address}"
-    )
+    try:
+        # Better local IP detection
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+        public_ip = requests.get("https://api.ipify.org", timeout=3).text
+        messagebox.showinfo(
+            "IP Addresses", f"Local IP: {local_ip}\nPublic IP: {public_ip}"
+        )
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to get IP addresses:\n{e}")
 
 
 def internet_speedtest():
