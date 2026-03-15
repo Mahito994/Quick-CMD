@@ -58,7 +58,7 @@ You can install **Quick-CMD** in two different ways depending on whether you wan
 
 ### Method 1 — Download the Executable (Recommended)
 
-1. Go to the [Releases](https://github.com/Mahito994/Quick-CMD/releases/tag/v1.0) page of this repository
+1. Go to the [Releases](https://github.com/Mahito994/Quick-CMD/releases) page of this repository
 2. Download the latest `.exe` file
 3. Run the executable
 
