@@ -34,7 +34,15 @@ from tkinter import messagebox, Tk
 from PIL import Image
 import json
 
-SETTINGS_FILE = "settings.json"
+# ---- Json setting file stuff ----
+APP_NAME = "Quick-CMD"
+
+# AppData\Roaming path for persistent settings
+appdata_path = os.path.join(os.environ.get("APPDATA"), APP_NAME)
+os.makedirs(appdata_path, exist_ok=True)  # create folder if it doesn't exist
+
+# Full path to settings.json
+SETTINGS_FILE = os.path.join(appdata_path, "settings.json")
 
 
 def load_settings():
@@ -52,6 +60,7 @@ def save_settings(data):
         json.dump(data, f, indent=4)
 
 
+# Load settings at start
 settings_data = load_settings()
 
 # ---- Update System ----
@@ -98,6 +107,10 @@ app.title(f"Quick-CMD ({username})")
 app.iconbitmap(resource_path("media/logo/logo.ico"))
 app.resizable(width=False, height=False)
 ctk.set_appearance_mode(settings_data.get("theme", "system"))
+
+# Show Username loader
+if not settings_data.get("show_username", True):
+    app.title("Quick-CMD")
 
 
 # ---- App functions ----
@@ -369,56 +382,93 @@ def apply_theme(theme):
 
 
 def settings_menu():
-    # App Setup
+    # Settings window
     setting_app = ctk.CTk()
     setting_app.geometry("420x260")
     setting_app.title("Settings")
     setting_app.resizable(width=False, height=False)
     setting_app.iconbitmap(resource_path("media/logo/logo.ico"))
 
-    # App main grid
+    # Main grid
     setting_app.grid_columnconfigure((0, 1), weight=1)
     setting_app.grid_rowconfigure(0, weight=1)
 
-    # App Fuctions
+    # --- Functions ---
+    def update_title():  # Update app title based on checkbox state
+        if settings_data.get("show_username", True):
+            app.title(f"Quick-CMD ({username})")
+        else:
+            app.title("Quick-CMD")
 
-    def setting_save():
+    def toggle_username():  # Live update title and saves it
+        settings_data["show_username"] = username_var.get()
+        save_settings(settings_data)
+        update_title()
+
+    def toggle_theme(*args):  # Live update theme and saves it
         theme = theme_var.get().lower()
+        ctk.set_appearance_mode(theme)
         settings_data["theme"] = theme
         save_settings(settings_data)
-        apply_theme(theme)
+
+        # Update frame colors dynamically
+        color = "#e0e0e0" if theme == "light" else "#2a2a2a"
+        try:
+            button_frame.configure(fg_color=color)
+            file_frame.configure(fg_color=color)
+            network_frame.configure(fg_color=color)
+            settings_frame.configure(fg_color=color)
+        except:
+            pass
+
+    def setting_reset():  # Reset theme and username to default
+        theme_var.set("System")
+        username_var.set(True)
+        settings_data["theme"] = "system"
+        settings_data["show_username"] = True
+        save_settings(settings_data)
+        toggle_theme()
+        toggle_username()
+
+    def setting_close():
         setting_app.destroy()
 
-    # Scrollable Theme Frame
-    setting_values_frame = ctk.CTkScrollableFrame(
+    # --- Scrollable Theme Frame ---
+    theme_frame = ctk.CTkScrollableFrame(
         setting_app, label_text="Theme", width=200, height=200
     )
-    setting_values_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
-    setting_values_frame.grid_columnconfigure(0, weight=1)
+    theme_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+    theme_frame.grid_columnconfigure(0, weight=1)
 
-    current_theme = settings_data.get("theme", "system")
-
-    theme_var = ctk.StringVar(value=current_theme.capitalize())
+    current_theme = settings_data.get("theme", "system").capitalize()
+    theme_var = ctk.StringVar(value=current_theme)
+    # Live update on change
+    theme_var.trace_add("write", toggle_theme)
 
     theme_dropdown = ctk.CTkOptionMenu(
-        setting_values_frame, values=["System", "Light", "Dark"], variable=theme_var
+        theme_frame, values=["System", "Light", "Dark"], variable=theme_var
     )
-
     theme_dropdown.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
-    # Scrollable Options Frame
+
+    # --- Scrollable Options Frame ---
     options_frame = ctk.CTkScrollableFrame(
         setting_app, label_text="Options", width=200, height=200
     )
     options_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
     options_frame.grid_columnconfigure(0, weight=1)
 
-    # Save Button
-    setting_button = ctk.CTkButton(setting_app, text="Save", command=setting_save)
-    setting_button.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="ew")
+    username_var = ctk.BooleanVar(value=settings_data.get("show_username", True))
+    username_checkbox = ctk.CTkCheckBox(
+        options_frame,
+        text="Show Username",
+        variable=username_var,
+        command=toggle_username,
+    )
+    username_checkbox.grid(row=0, column=0, padx=10, pady=(5, 10), sticky="w")
 
-    def setting_reset():
-        theme_var.set("System")
-        apply_theme("system")
+    # --- Buttons ---
+    save_button = ctk.CTkButton(setting_app, text="Save/Close", command=setting_close)
+    save_button.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="ew")
 
     reset_button = ctk.CTkButton(setting_app, text="Reset", command=setting_reset)
     reset_button.grid(row=1, column=1, padx=10, pady=(0, 10), sticky="ew")
