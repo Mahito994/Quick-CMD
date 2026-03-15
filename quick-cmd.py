@@ -1,4 +1,4 @@
-# Stuff for the working PyInstaller (.exe)
+# ---- Stuff for the working PyInstaller (.exe) ----
 # python -m PyInstaller --onefile --noconsole --clean --name Quick-CMD --icon=media/logo/logo.ico --hidden-import=speedtest --hidden-import=winshell --collect-all customtkinter --add-data "media/logo/logo.ico;media/logo" quick-cmd.py
 import sys
 import os
@@ -18,6 +18,7 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
+# ---- Libary imports ----
 import customtkinter as ctk
 import subprocess
 import os
@@ -30,7 +31,7 @@ import speedtest
 import threading
 from tkinter import messagebox
 
-# App Setup
+# ---- App Setup ----
 username = os.getlogin()
 app = ctk.CTk()
 app.geometry("310x310")
@@ -40,7 +41,7 @@ app.resizable(width=False, height=False)
 ctk.set_appearance_mode("system")
 
 
-# App functions
+# ---- App functions ----
 def open_cmd():
     home_dir = os.path.expanduser("~")
     subprocess.Popen(
@@ -131,11 +132,6 @@ def del_trash_files():
         error_message = "The cleanup failed"
         print(f"{error_message}, Error details: {e}")
         messagebox.showerror("Error", "Your Recycle Bin is already empty.")
-
-
-import os
-import shutil
-from tkinter import messagebox
 
 
 def clear_browser_cache():
@@ -286,36 +282,36 @@ def internet_speedtest():
     start_button.pack(pady=15)
 
 
-# App Title
+# ---- App Title ----
 label = ctk.CTkLabel(app, text="Quick-CMD", fg_color="transparent", font=("Arial", 26))
 label.grid(row=0, column=0, columnspan=3, pady=10)
 
-# Button Preferences
-button_padx = 5
-button_pady = 5
 
-
-# App Frams
+# ---- App Frams ----
 def get_frame_color():
     return "#e0e0e0" if ctk.get_appearance_mode() == "Light" else "#2a2a2a"
 
 
-button_frame = ctk.CTkFrame(
+button_frame = ctk.CTkFrame(  # Frame for Shortcuts
     app, corner_radius=10, fg_color=get_frame_color(), border_width=1
 )
 button_frame.grid(row=1, column=0, columnspan=3, pady=5, padx=5, sticky="nsew")
 
-file_frame = ctk.CTkFrame(
+file_frame = ctk.CTkFrame(  # Frame for Files
     app, corner_radius=10, fg_color=get_frame_color(), border_width=1
 )
 file_frame.grid(row=2, column=0, columnspan=3, pady=5, padx=5, sticky="nsew")
 
-network_frame = ctk.CTkFrame(
+network_frame = ctk.CTkFrame(  # Frame for Network
     app, corner_radius=10, fg_color=get_frame_color(), border_width=1
 )
 network_frame.grid(row=3, column=0, columnspan=3, pady=5, padx=5, sticky="nsew")
 
-# App Buttons
+# ---- App Buttons ----
+button_padx = 5
+button_pady = 5
+
+# App Buttons for Shortcuts
 cmd_button = ctk.CTkButton(button_frame, text="Terminal", command=open_cmd)
 cmd_button.grid(row=0, column=0, padx=button_padx, pady=button_pady)
 
@@ -363,7 +359,7 @@ clear_browser_cache_button = ctk.CTkButton(
 )
 clear_browser_cache_button.grid(row=1, column=1, padx=button_padx, pady=button_pady)
 
-# App button for Network
+# App buttons for Network
 show_ip_button = ctk.CTkButton(network_frame, text="Show IP", command=show_ip)
 show_ip_button.grid(row=0, column=0, padx=button_padx, pady=button_pady)
 
@@ -372,7 +368,7 @@ speed_test_button = ctk.CTkButton(
 )
 speed_test_button.grid(row=0, column=1, padx=button_padx, pady=button_pady)
 
-# Dynamic Theme Polling System
+# ---- Dynamic Theme Polling System ----
 current_mode = ctk.get_appearance_mode()
 
 
