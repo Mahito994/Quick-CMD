@@ -21,15 +21,52 @@ def resource_path(relative_path):
 # ---- Libary imports ----
 import customtkinter as ctk
 import subprocess
-import os
 import ctypes
 import tempfile
 import winshell
+import winsound
+import webbrowser
 import socket
 import requests
 import speedtest
 import threading
-from tkinter import messagebox
+from tkinter import messagebox, Tk
+
+# ---- Update System ----
+downloaded_version = "v1.0"
+
+
+def parse_version(v):
+    return tuple(map(int, v.lstrip("v").split(".")))
+
+
+def check_update():
+    try:
+        url = f"https://api.github.com/repos/Mahito994/Quick-CMD/releases/latest"
+        response = requests.get(url, timeout=3)  # add timeout to prevent freeze
+        if response.status_code != 200:
+            return
+        latest_release = response.json()
+        if parse_version(latest_release["tag_name"]) > parse_version(
+            downloaded_version
+        ):
+            root = Tk()
+            root.withdraw()  # hide main window
+            winsound.MessageBeep(winsound.MB_ICONASTERISK)
+            result = messagebox.askyesno(
+                "Update Available",
+                f"A new update ({latest_release['tag_name']}) is available!\n\nDo you want to open the release page?",
+            )
+            if result:
+                webbrowser.open(latest_release["html_url"])
+            root.destroy()
+    except Exception:
+        # silently fail if no internet or request fails
+        pass
+
+
+# Start the update check in a separate thread
+threading.Thread(target=check_update, daemon=True).start()
 
 # ---- App Setup ----
 username = os.getlogin()
