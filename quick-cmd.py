@@ -31,6 +31,28 @@ import requests
 import speedtest
 import threading
 from tkinter import messagebox, Tk
+from PIL import Image
+import json
+
+SETTINGS_FILE = "settings.json"
+
+
+def load_settings():
+    if os.path.exists(SETTINGS_FILE):
+        try:
+            with open(SETTINGS_FILE, "r") as f:
+                return json.load(f)
+        except:
+            return {}
+    return {}
+
+
+def save_settings(data):
+    with open(SETTINGS_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+
+
+settings_data = load_settings()
 
 # ---- Update System ----
 downloaded_version = "v1.1"
@@ -71,11 +93,11 @@ threading.Thread(target=check_update, daemon=True).start()
 # ---- App Setup ----
 username = os.getlogin()
 app = ctk.CTk()
-app.geometry("310x310")
+app.geometry("310x358")
 app.title(f"Quick-CMD ({username})")
 app.iconbitmap(resource_path("media/logo/logo.ico"))
 app.resizable(width=False, height=False)
-ctk.set_appearance_mode("system")
+ctk.set_appearance_mode(settings_data.get("theme", "system"))
 
 
 # ---- App functions ----
@@ -233,11 +255,11 @@ def show_ip():
 
 def internet_speedtest():
     # New window
-    speed_window = ctk.CTkToplevel(app)
+    speed_window = ctk.CTk()
     speed_window.geometry("260x285")
-    speed_window.title("Internet Speed Test")
+    speed_window.title("SpeedTest")
     speed_window.resizable(width=False, height=False)
-    speed_window.transient(app)
+    speed_window.iconbitmap(resource_path("media/logo/logo.ico"))
 
     # New UI
     title = ctk.CTkLabel(
@@ -321,6 +343,88 @@ def internet_speedtest():
     )
     start_button.pack(pady=15)
 
+    speed_window.mainloop()
+
+
+def closing_app():
+    try:
+        app.quit()
+        app.destroy()
+    except:
+        pass
+
+
+def apply_theme(theme):
+    ctk.set_appearance_mode(theme)
+
+    color = "#e0e0e0" if ctk.get_appearance_mode() == "Light" else "#2a2a2a"
+
+    try:
+        button_frame.configure(fg_color=color)
+        file_frame.configure(fg_color=color)
+        network_frame.configure(fg_color=color)
+        settings_frame.configure(fg_color=color)
+    except:
+        pass
+
+
+def settings_menu():
+    # App Setup
+    setting_app = ctk.CTk()
+    setting_app.geometry("420x260")
+    setting_app.title("Settings")
+    setting_app.resizable(width=False, height=False)
+    setting_app.iconbitmap(resource_path("media/logo/logo.ico"))
+
+    # App main grid
+    setting_app.grid_columnconfigure((0, 1), weight=1)
+    setting_app.grid_rowconfigure(0, weight=1)
+
+    # App Fuctions
+
+    def setting_save():
+        theme = theme_var.get().lower()
+        settings_data["theme"] = theme
+        save_settings(settings_data)
+        apply_theme(theme)
+        setting_app.destroy()
+
+    # Scrollable Theme Frame
+    setting_values_frame = ctk.CTkScrollableFrame(
+        setting_app, label_text="Theme", width=200, height=200
+    )
+    setting_values_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+    setting_values_frame.grid_columnconfigure(0, weight=1)
+
+    current_theme = settings_data.get("theme", "system")
+
+    theme_var = ctk.StringVar(value=current_theme.capitalize())
+
+    theme_dropdown = ctk.CTkOptionMenu(
+        setting_values_frame, values=["System", "Light", "Dark"], variable=theme_var
+    )
+
+    theme_dropdown.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+    # Scrollable Options Frame
+    options_frame = ctk.CTkScrollableFrame(
+        setting_app, label_text="Options", width=200, height=200
+    )
+    options_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
+    options_frame.grid_columnconfigure(0, weight=1)
+
+    # Save Button
+    setting_button = ctk.CTkButton(setting_app, text="Save", command=setting_save)
+    setting_button.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="ew")
+
+    def setting_reset():
+        theme_var.set("System")
+        apply_theme("system")
+
+    reset_button = ctk.CTkButton(setting_app, text="Reset", command=setting_reset)
+    reset_button.grid(row=1, column=1, padx=10, pady=(0, 10), sticky="ew")
+
+    setting_app.mainloop()
+
 
 # ---- App Title ----
 label = ctk.CTkLabel(app, text="Quick-CMD", fg_color="transparent", font=("Arial", 26))
@@ -346,6 +450,11 @@ network_frame = ctk.CTkFrame(  # Frame for Network
     app, corner_radius=10, fg_color=get_frame_color(), border_width=1
 )
 network_frame.grid(row=3, column=0, columnspan=3, pady=5, padx=5, sticky="nsew")
+
+settings_frame = ctk.CTkFrame(  # Frame for Settings
+    app, corner_radius=10, fg_color=get_frame_color(), border_width=1
+)
+settings_frame.grid(row=4, column=0, columnspan=3, pady=5, padx=5, sticky="nsew")
 
 # ---- App Buttons ----
 button_padx = 5
@@ -399,7 +508,7 @@ clear_browser_cache_button = ctk.CTkButton(
 )
 clear_browser_cache_button.grid(row=1, column=1, padx=button_padx, pady=button_pady)
 
-# App buttons for Network
+# App Buttons for Network
 show_ip_button = ctk.CTkButton(network_frame, text="Show IP", command=show_ip)
 show_ip_button.grid(row=0, column=0, padx=button_padx, pady=button_pady)
 
@@ -408,20 +517,53 @@ speed_test_button = ctk.CTkButton(
 )
 speed_test_button.grid(row=0, column=1, padx=button_padx, pady=button_pady)
 
+# App Buttons for Settings
+show_ip_button = ctk.CTkButton(
+    settings_frame,
+    text="Exit",
+    fg_color="#474747",
+    hover_color="#373737",
+    command=closing_app,
+)
+show_ip_button.grid(row=0, column=0, padx=button_padx, pady=button_pady)
+
+show_ip_button = ctk.CTkButton(
+    settings_frame,
+    text="Settings",
+    fg_color="#474747",
+    hover_color="#373737",
+    command=settings_menu,
+)
+show_ip_button.grid(row=0, column=1, padx=button_padx, pady=button_pady)
+
 # ---- Dynamic Theme Polling System ----
 current_mode = ctk.get_appearance_mode()
 
 
 def poll_appearance_mode():
     global current_mode
+
+    if not app.winfo_exists():
+        return
+
     new_mode = ctk.get_appearance_mode()
+
     if new_mode != current_mode:
         current_mode = new_mode
         color = "#e0e0e0" if new_mode == "Light" else "#2a2a2a"
-        button_frame.configure(fg_color=color)
-        file_frame.configure(fg_color=color)
-        network_frame.configure(fg_color=color)
-    app.after(500, poll_appearance_mode)
+
+        try:
+            button_frame.configure(fg_color=color)
+            file_frame.configure(fg_color=color)
+            network_frame.configure(fg_color=color)
+            settings_frame.configure(fg_color=color)
+        except:
+            pass
+
+    try:
+        app.after(500, poll_appearance_mode)
+    except RuntimeError:
+        pass
 
 
 poll_appearance_mode()
