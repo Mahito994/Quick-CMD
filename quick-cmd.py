@@ -64,7 +64,7 @@ def save_settings(data):
 settings_data = load_settings()
 
 # ---- Update System ----
-downloaded_version = "v1.1"
+downloaded_version = "v2.0"
 
 
 def parse_version(v):
