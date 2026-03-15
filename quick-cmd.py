@@ -30,7 +30,7 @@ import speedtest
 import threading
 from tkinter import messagebox
 
-# App Preferences
+# App Setup
 username = os.getlogin()
 app = ctk.CTk()
 app.geometry("310x310")
@@ -294,9 +294,26 @@ label.grid(row=0, column=0, columnspan=3, pady=10)
 button_padx = 5
 button_pady = 5
 
-# App Frame
-button_frame = ctk.CTkFrame(app, corner_radius=10, fg_color="#2a2a2a", border_width=1)
+
+# App Frams
+def get_frame_color():
+    return "#e0e0e0" if ctk.get_appearance_mode() == "Light" else "#2a2a2a"
+
+
+button_frame = ctk.CTkFrame(
+    app, corner_radius=10, fg_color=get_frame_color(), border_width=1
+)
 button_frame.grid(row=1, column=0, columnspan=3, pady=5, padx=5, sticky="nsew")
+
+file_frame = ctk.CTkFrame(
+    app, corner_radius=10, fg_color=get_frame_color(), border_width=1
+)
+file_frame.grid(row=2, column=0, columnspan=3, pady=5, padx=5, sticky="nsew")
+
+network_frame = ctk.CTkFrame(
+    app, corner_radius=10, fg_color=get_frame_color(), border_width=1
+)
+network_frame.grid(row=3, column=0, columnspan=3, pady=5, padx=5, sticky="nsew")
 
 # App Buttons
 cmd_button = ctk.CTkButton(button_frame, text="Terminal", command=open_cmd)
@@ -325,10 +342,6 @@ taskmgr_button = ctk.CTkButton(
 )
 taskmgr_button.grid(row=2, column=1, padx=button_padx, pady=button_pady)
 
-# App frame for Files
-file_frame = ctk.CTkFrame(app, corner_radius=10, fg_color="#2a2a2a", border_width=1)
-file_frame.grid(row=2, column=0, columnspan=3, pady=5, padx=5, sticky="nsew")
-
 # App Buttons for Files
 del_temp_button = ctk.CTkButton(
     file_frame, text="Clear Temp Files", command=del_temp_files
@@ -350,10 +363,6 @@ clear_browser_cache_button = ctk.CTkButton(
 )
 clear_browser_cache_button.grid(row=1, column=1, padx=button_padx, pady=button_pady)
 
-# App frame for Network
-network_frame = ctk.CTkFrame(app, corner_radius=10, fg_color="#2a2a2a", border_width=1)
-network_frame.grid(row=3, column=0, columnspan=3, pady=5, padx=5, sticky="nsew")
-
 # App button for Network
 show_ip_button = ctk.CTkButton(network_frame, text="Show IP", command=show_ip)
 show_ip_button.grid(row=0, column=0, padx=button_padx, pady=button_pady)
@@ -362,6 +371,24 @@ speed_test_button = ctk.CTkButton(
     network_frame, text="Speed Test", command=internet_speedtest
 )
 speed_test_button.grid(row=0, column=1, padx=button_padx, pady=button_pady)
+
+# Dynamic Theme Polling System
+current_mode = ctk.get_appearance_mode()
+
+
+def poll_appearance_mode():
+    global current_mode
+    new_mode = ctk.get_appearance_mode()
+    if new_mode != current_mode:
+        current_mode = new_mode
+        color = "#e0e0e0" if new_mode == "Light" else "#2a2a2a"
+        button_frame.configure(fg_color=color)
+        file_frame.configure(fg_color=color)
+        network_frame.configure(fg_color=color)
+    app.after(500, poll_appearance_mode)
+
+
+poll_appearance_mode()
 
 # Run App
 app.mainloop()
