@@ -3,7 +3,9 @@ from PyInstaller.utils.hooks import collect_all
 
 datas = [('media/logo/logo.ico', 'media/logo')]
 binaries = []
-hiddenimports = ['speedtest', 'winshell']
+hiddenimports = ['speedtest', 'winshell', 'CTkColorPicker', 'requests']
+tmp_ret = collect_all('CTkColorPicker')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all('customtkinter')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 

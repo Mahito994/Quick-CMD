@@ -1,5 +1,5 @@
 # ---- Stuff for the working PyInstaller (.exe) ----
-# python -m PyInstaller --onefile --noconsole --clean --name Quick-CMD --icon=media/logo/logo.ico --hidden-import=speedtest --hidden-import=winshell --collect-all customtkinter --add-data "media/logo/logo.ico;media/logo" quick-cmd.py
+# python -m PyInstaller --onefile --noconsole --clean --name Quick-CMD --icon=media/logo/logo.ico --hidden-import=speedtest --hidden-import=winshell --hidden-import=CTkColorPicker --hidden-import=requests --collect-all customtkinter --add-data "media/logo/logo.ico;media/logo" quick-cmd.py
 import sys
 import os
 
@@ -10,7 +10,6 @@ if sys.stderr is None:
 
 
 def resource_path(relative_path):
-    """Get absolute path to resource, works for dev and PyInstaller"""
     try:
         base_path = sys._MEIPASS
     except AttributeError:
@@ -30,8 +29,8 @@ import socket
 import requests
 import speedtest
 import threading
+from CTkColorPicker import AskColor
 from tkinter import messagebox, Tk
-from PIL import Image
 import json
 
 # ---- Json setting file stuff ----
@@ -63,8 +62,117 @@ def save_settings(data):
 # Load settings at start
 settings_data = load_settings()
 
+# Accent color defaults and utilities
+DEFAULT_ACCENT_COLOR = "#1f6aa5"
+
+
+def darker_color(hex_color, factor=0.8):
+    try:
+        hex_color = hex_color.lstrip("#")
+        r = int(hex_color[0:2], 16)
+        g = int(hex_color[2:4], 16)
+        b = int(hex_color[4:6], 16)
+        r = max(0, min(255, int(r * factor)))
+        g = max(0, min(255, int(g * factor)))
+        b = max(0, min(255, int(b * factor)))
+        return f"#{r:02x}{g:02x}{b:02x}"
+    except Exception:
+        return DEFAULT_ACCENT_COLOR
+
+
+def contrast_color(hex_color):
+    try:
+        hex_color = hex_color.lstrip("#")
+        r = int(hex_color[0:2], 16)
+        g = int(hex_color[2:4], 16)
+        b = int(hex_color[4:6], 16)
+        # luminance formula
+        lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+        return "#000000" if lum > 0.5 else "#ffffff"
+    except Exception:
+        return "#ffffff"
+
+
+accent_color = settings_data.get("accent_color", DEFAULT_ACCENT_COLOR)
+accent_hover_color = darker_color(accent_color)
+accent_checkmark_color = contrast_color(accent_color)
+
+accent_buttons = []
+accent_checkboxes = []
+accent_optionmenus = []
+
+
+def register_accent_button(button):
+    try:
+        button.configure(fg_color=accent_color, hover_color=accent_hover_color)
+    except Exception:
+        pass
+    accent_buttons.append(button)
+
+
+def register_accent_checkbox(checkbox):
+    try:
+        checkbox.configure(
+            fg_color=accent_color,
+            hover_color=accent_hover_color,
+            checkmark_color=accent_checkmark_color,
+        )
+    except Exception:
+        pass
+    accent_checkboxes.append(checkbox)
+
+
+def register_accent_optionmenu(optionmenu):
+    try:
+        optionmenu.configure(
+            button_color=accent_color,
+            button_hover_color=accent_hover_color,
+            fg_color=accent_color,
+        )
+    except Exception:
+        pass
+    accent_optionmenus.append(optionmenu)
+
+
+def apply_accent_color(color, save=True):
+    global accent_color, accent_hover_color, accent_checkmark_color
+    accent_color = color or DEFAULT_ACCENT_COLOR
+    accent_hover_color = darker_color(accent_color)
+    accent_checkmark_color = contrast_color(accent_color)
+
+    if save:
+        settings_data["accent_color"] = accent_color
+        save_settings(settings_data)
+
+    for btn in accent_buttons:
+        try:
+            btn.configure(fg_color=accent_color, hover_color=accent_hover_color)
+        except Exception:
+            pass
+
+    for chk in accent_checkboxes:
+        try:
+            chk.configure(
+                fg_color=accent_color,
+                hover_color=accent_hover_color,
+                checkmark_color=accent_checkmark_color,
+            )
+        except Exception:
+            pass
+
+    for opt in accent_optionmenus:
+        try:
+            opt.configure(
+                button_color=accent_color,
+                button_hover_color=accent_hover_color,
+                fg_color=accent_color,
+            )
+        except Exception:
+            pass
+
+
 # ---- Update System ----
-downloaded_version = "v2.0"
+downloaded_version = "v2.1"
 
 
 def parse_version(v):
@@ -270,7 +378,7 @@ def internet_speedtest():
     # New window
     speed_window = ctk.CTk()
     speed_window.geometry("260x285")
-    speed_window.title("SpeedTest")
+    speed_window.title("Speedtest")
     speed_window.resizable(width=False, height=False)
     speed_window.iconbitmap(resource_path("media/logo/logo.ico"))
 
@@ -311,6 +419,7 @@ def internet_speedtest():
             st = speedtest.Speedtest()
 
             # Get best server (avoids 403)
+            st.get_servers()
             st.get_best_server()
 
             # Download and upload speeds
@@ -341,7 +450,9 @@ def internet_speedtest():
             print("Speedtest error:", e)
         finally:
             # Re-enable button and reset color
-            start_button.configure(state="normal", fg_color="#1f6aa5")
+            start_button.configure(
+                state="normal", fg_color=accent_color, hover_color=accent_hover_color
+            )
 
     def start_test():
         threading.Thread(target=run_test, daemon=True).start()
@@ -352,9 +463,11 @@ def internet_speedtest():
         text="Start Speed Test",
         command=start_test,
         width=230,
-        fg_color="#1f6aa5",
+        fg_color=accent_color,
+        hover_color=accent_hover_color,
     )
     start_button.pack(pady=15)
+    register_accent_button(start_button)
 
     speed_window.mainloop()
 
@@ -429,6 +542,7 @@ def settings_menu():
         save_settings(settings_data)
         toggle_theme()
         toggle_username()
+        apply_accent_color(DEFAULT_ACCENT_COLOR)
 
     def setting_close():
         setting_app.destroy()
@@ -445,10 +559,69 @@ def settings_menu():
     # Live update on change
     theme_var.trace_add("write", toggle_theme)
 
+    def choose_accent_color():
+        try:
+            picker = AskColor(
+                initial_color=accent_color,
+                title="Choose Accent Color",
+                button_color=accent_color,
+                button_hover_color=accent_hover_color,
+            )
+            selected = picker.get()
+            if selected:
+                hex_val = selected
+                apply_accent_color(hex_val)
+                accent_entry.delete(0, "end")
+                accent_entry.insert(0, hex_val)
+        except Exception:
+            pass
+
     theme_dropdown = ctk.CTkOptionMenu(
-        theme_frame, values=["System", "Light", "Dark"], variable=theme_var
+        theme_frame,
+        values=["System", "Light", "Dark"],
+        variable=theme_var,
+        button_color=accent_color,
+        button_hover_color=accent_hover_color,
     )
     theme_dropdown.grid(row=0, column=0, padx=10, pady=10, sticky="ew")
+    register_accent_optionmenu(theme_dropdown)
+
+    def apply_entry_color():
+        hex_val = accent_entry.get().strip()
+        if not hex_val.startswith("#"):
+            hex_val = "#" + hex_val
+        if len(hex_val) == 7 and all(
+            c in "0123456789abcdefABCDEF" for c in hex_val[1:]
+        ):
+            apply_accent_color(hex_val)
+        else:
+            messagebox.showerror(
+                "Invalid color", "Please enter a valid hex color like #1f6aa5"
+            )
+
+    accent_entry = ctk.CTkEntry(theme_frame, placeholder_text="#1f6aa5")
+    accent_entry.grid(row=2, column=0, padx=10, pady=(0, 6), sticky="ew")
+    accent_entry.insert(0, accent_color)
+
+    accent_apply_button = ctk.CTkButton(
+        theme_frame,
+        text="Set Hex Color",
+        command=apply_entry_color,
+        fg_color=accent_color,
+        hover_color=accent_hover_color,
+    )
+    accent_apply_button.grid(row=3, column=0, padx=10, pady=2, sticky="ew")
+    register_accent_button(accent_apply_button)
+
+    accent_button = ctk.CTkButton(
+        theme_frame,
+        text="Pick Accent Color",
+        command=choose_accent_color,
+        fg_color=accent_color,
+        hover_color=accent_hover_color,
+    )
+    accent_button.grid(row=4, column=0, padx=10, pady=2, sticky="ew")
+    register_accent_button(accent_button)
 
     # --- Scrollable Options Frame ---
     options_frame = ctk.CTkScrollableFrame(
@@ -463,15 +636,48 @@ def settings_menu():
         text="Show Username",
         variable=username_var,
         command=toggle_username,
+        fg_color=accent_color,
+        hover_color=accent_hover_color,
+        checkmark_color=accent_color,
     )
     username_checkbox.grid(row=0, column=0, padx=10, pady=(5, 10), sticky="w")
+    register_accent_checkbox(username_checkbox)
+
+    def show_app_version():
+        messagebox.showinfo(
+            "App Version", f"You currently have version {downloaded_version} installed."
+        )
+
+    version_button = ctk.CTkButton(
+        options_frame,
+        text="Show App Version",
+        command=show_app_version,
+        fg_color=accent_color,
+        hover_color=accent_hover_color,
+    )
+    version_button.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="ew")
+    register_accent_button(version_button)
 
     # --- Buttons ---
-    save_button = ctk.CTkButton(setting_app, text="Save/Close", command=setting_close)
+    save_button = ctk.CTkButton(
+        setting_app,
+        text="Save/Close",
+        command=setting_close,
+        fg_color=accent_color,
+        hover_color=accent_hover_color,
+    )
     save_button.grid(row=1, column=0, padx=10, pady=(0, 10), sticky="ew")
+    register_accent_button(save_button)
 
-    reset_button = ctk.CTkButton(setting_app, text="Reset", command=setting_reset)
+    reset_button = ctk.CTkButton(
+        setting_app,
+        text="Reset",
+        command=setting_reset,
+        fg_color=accent_color,
+        hover_color=accent_hover_color,
+    )
     reset_button.grid(row=1, column=1, padx=10, pady=(0, 10), sticky="ew")
+    register_accent_button(reset_button)
 
     setting_app.mainloop()
 
@@ -513,59 +719,71 @@ button_pady = 5
 # App Buttons for Shortcuts
 cmd_button = ctk.CTkButton(button_frame, text="Terminal", command=open_cmd)
 cmd_button.grid(row=0, column=0, padx=button_padx, pady=button_pady)
+register_accent_button(cmd_button)
 
 cmd_admin_button = ctk.CTkButton(
     button_frame, text="Terminal (Admin)", command=open_cmd_admin
 )
 cmd_admin_button.grid(row=0, column=1, padx=button_padx, pady=button_pady)
+register_accent_button(cmd_admin_button)
 
 reg_button = ctk.CTkButton(button_frame, text="Registry", command=open_registry)
 reg_button.grid(row=1, column=0, padx=button_padx, pady=button_pady)
+register_accent_button(reg_button)
 
 del_app_button = ctk.CTkButton(
     button_frame, text="Delete Apps", command=open_control_panel
 )
 del_app_button.grid(row=1, column=1, padx=button_padx, pady=button_pady)
+register_accent_button(del_app_button)
 
 devicemgr_button = ctk.CTkButton(
     button_frame, text="Device Manager", command=open_device_manager
 )
 devicemgr_button.grid(row=2, column=0, padx=button_padx, pady=button_pady)
+register_accent_button(devicemgr_button)
 
 taskmgr_button = ctk.CTkButton(
     button_frame, text="Task Manager", command=open_task_manager
 )
 taskmgr_button.grid(row=2, column=1, padx=button_padx, pady=button_pady)
+register_accent_button(taskmgr_button)
 
 # App Buttons for Files
 del_temp_button = ctk.CTkButton(
     file_frame, text="Clear Temp Files", command=del_temp_files
 )
 del_temp_button.grid(row=0, column=0, padx=button_padx, pady=button_pady)
+register_accent_button(del_temp_button)
 
 del_trash_button = ctk.CTkButton(
     file_frame, text="Clear Recycle Bin", command=del_trash_files
 )
 del_trash_button.grid(row=0, column=1, padx=button_padx, pady=button_pady)
+register_accent_button(del_trash_button)
 
 disk_cleanup_button = ctk.CTkButton(
     file_frame, text="Disk Cleanup", command=disk_cleanup
 )
 disk_cleanup_button.grid(row=1, column=0, padx=button_padx, pady=button_pady)
+register_accent_button(disk_cleanup_button)
 
 clear_browser_cache_button = ctk.CTkButton(
     file_frame, text="Cear Browser cache", command=clear_browser_cache
 )
 clear_browser_cache_button.grid(row=1, column=1, padx=button_padx, pady=button_pady)
+register_accent_button(clear_browser_cache_button)
 
 # App Buttons for Network
 show_ip_button = ctk.CTkButton(network_frame, text="Show IP", command=show_ip)
 show_ip_button.grid(row=0, column=0, padx=button_padx, pady=button_pady)
+register_accent_button(show_ip_button)
 
 speed_test_button = ctk.CTkButton(
     network_frame, text="Speed Test", command=internet_speedtest
 )
 speed_test_button.grid(row=0, column=1, padx=button_padx, pady=button_pady)
+register_accent_button(speed_test_button)
 
 # App Buttons for Settings
 show_ip_button = ctk.CTkButton(
@@ -585,6 +803,9 @@ show_ip_button = ctk.CTkButton(
     command=settings_menu,
 )
 show_ip_button.grid(row=0, column=1, padx=button_padx, pady=button_pady)
+
+# apply accent color to existing widgets
+apply_accent_color(accent_color, save=False)
 
 # ---- Dynamic Theme Polling System ----
 current_mode = ctk.get_appearance_mode()
