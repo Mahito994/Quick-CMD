@@ -480,6 +480,25 @@ def closing_app():
         pass
 
 
+def update_special_buttons():
+    mode = ctk.get_appearance_mode()
+
+    if mode == "Light":
+        fg = "#c7c7c7"  # button background
+        hover = "#b0b0b0"
+        text_color = "#000000"  # dark text for light mode
+    else:
+        fg = "#474747"  # dark gray background
+        hover = "#373737"
+        text_color = "#dce4ee"  # dark text for dark mode
+
+    try:
+        exit_button.configure(fg_color=fg, hover_color=hover, text_color=text_color)
+        settings_button.configure(fg_color=fg, hover_color=hover, text_color=text_color)
+    except:
+        pass
+
+
 def apply_theme(theme):
     ctk.set_appearance_mode(theme)
 
@@ -519,6 +538,7 @@ def settings_menu():
         update_title()
 
     def toggle_theme(*args):  # Live update theme and saves it
+        update_special_buttons()
         theme = theme_var.get().lower()
         ctk.set_appearance_mode(theme)
         settings_data["theme"] = theme
@@ -786,26 +806,27 @@ speed_test_button.grid(row=0, column=1, padx=button_padx, pady=button_pady)
 register_accent_button(speed_test_button)
 
 # App Buttons for Settings
-show_ip_button = ctk.CTkButton(
+exit_button = ctk.CTkButton(
     settings_frame,
     text="Exit",
     fg_color="#474747",
     hover_color="#373737",
     command=closing_app,
 )
-show_ip_button.grid(row=0, column=0, padx=button_padx, pady=button_pady)
+exit_button.grid(row=0, column=0, padx=button_padx, pady=button_pady)
 
-show_ip_button = ctk.CTkButton(
+settings_button = ctk.CTkButton(
     settings_frame,
     text="Settings",
     fg_color="#474747",
     hover_color="#373737",
     command=settings_menu,
 )
-show_ip_button.grid(row=0, column=1, padx=button_padx, pady=button_pady)
+settings_button.grid(row=0, column=1, padx=button_padx, pady=button_pady)
 
 # apply accent color to existing widgets
 apply_accent_color(accent_color, save=False)
+update_special_buttons()
 
 # ---- Dynamic Theme Polling System ----
 current_mode = ctk.get_appearance_mode()
@@ -830,6 +851,8 @@ def poll_appearance_mode():
             settings_frame.configure(fg_color=color)
         except:
             pass
+
+        update_special_buttons()
 
     try:
         app.after(500, poll_appearance_mode)
