@@ -1,5 +1,5 @@
 # ---- Stuff for the working PyInstaller (.exe) ----
-# python -m PyInstaller --onefile --noconsole --clean --name Quick-CMD --icon=media/logo/logo.ico --hidden-import=speedtest --hidden-import=winshell --hidden-import=CTkColorPicker --hidden-import=requests --collect-all customtkinter --add-data "media/logo/logo.ico;media/logo" quick-cmd.py
+# python -m PyInstaller --onefile --noconsole --clean --name Quick-CMD --icon=media/logo/logo.ico --hidden-import=speedtest --hidden-import=winshell --hidden-import=requests --collect-all customtkinter --collect-all CTkColorPicker --add-data "media/logo/logo.ico;media/logo" quick-cmd.py
 import sys
 import os
 
