@@ -172,7 +172,7 @@ def apply_accent_color(color, save=True):
 
 
 # ---- Update System ----
-downloaded_version = "v2.1"
+downloaded_version = "v2.2"
 
 
 def parse_version(v):
